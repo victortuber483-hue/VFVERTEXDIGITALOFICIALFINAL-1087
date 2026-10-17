@@ -1,4 +1,5 @@
 import { SlideLink } from "./slide-link";
+import { OrbitLogo } from "./orbit-logo";
 import { KineticText } from "./kinetic-text";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowUp, ArrowUpRight, Instagram, MessageCircle, X } from "lucide-react";
@@ -22,7 +23,7 @@ export function VertexBio({ opacity, onRestart }: { opacity: number; onRestart: 
     <section ref={section} id="contatos" className="vertex-bio" aria-label="Links e portfólio da VF Vertex Digital" style={{ opacity: opacity * opacity * (3 - 2 * opacity), "--entry": opacity, visibility: opacity === 0 ? "hidden" : "visible" } as CSSProperties}>
       <div className="bio-grid" aria-hidden="true"><i /><i /><i /><i /><i /><i /></div>
       <div className="bio-column">
-        <div className="bio-welcome" data-scroll-reveal="group" data-motion-group><img src="/media/logo-transparent.png" alt="VF Vertex Digital" className="bio-logo" data-scroll-reveal="up" /><h2><KineticText>Seja Bem Vindo</KineticText></h2><p><KineticText variant="subtitle">Sites de outro universo</KineticText></p></div>
+        <div className="bio-welcome" data-scroll-reveal="group" data-motion-group><OrbitLogo active={opacity > .9} /><h2><KineticText>Seja Bem Vindo</KineticText></h2><p><KineticText variant="subtitle">Sites de outro universo</KineticText></p></div>
         <div className="bio-links">
           <div className="bio-card-reveal" data-scroll-reveal="flip"><a className="bio-link-card" href={whatsapp} target="_blank" rel="noopener noreferrer"><span className="bio-icon"><FaWhatsapp /></span><div><h3>WhatsApp</h3><p>Entre em contato para<br />orçamentos e dúvidas.</p><span className="bio-link-label">Clique para acessar</span></div></a></div>
           <div className="bio-card-reveal" data-scroll-reveal="flip"><button className="bio-link-card" onClick={() => setAbout(true)}><span className="bio-icon bio-vf-icon">VF</span><div><h3>Sobre Nós</h3><p>Conheça o que criamos<br />para elevar sua marca.</p><span className="bio-link-label">Clique para acessar</span></div></button></div>

@@ -1,4 +1,6 @@
 # VF Vertex Digital — direção visual
+## Estrela orbital na logo da bio
+Estrela roxa de cinco pontas com geometria extrudada/facetada, reflexos pérola e halo violeta. Órbita elíptica contínua à frente e atrás da logo original em “Seja Bem Vindo”, rastro de partículas que desaparecem suavemente. Canvas decorativo, sem interceptar toque, animação só quando a logo está visível após o portal; reduced-motion apresenta estrela estática sem partículas. Preservar espaço da logo, cards, botões e jornada.
 ## Restaurar estética aprovada dos CTAs
 Não simplificar: restaurar trilho violeta vibrante, gradiente pérola/violeta na seta e halo original. Manter wrapper separado e correções de clique/deslize. Texto desaparece antes de ser atravessado pelo círculo; nenhuma mudança de layout das seções.
 ## Refinamento dos botões deslizantes
