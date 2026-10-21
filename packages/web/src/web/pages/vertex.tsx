@@ -1,9 +1,10 @@
 import { SlideLink } from "../components/slide-link";
 import { KineticText } from "../components/kinetic-text";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { ArrowUpRight, Menu, X } from "lucide-react";
 import { CosmicScene } from "../components/cosmic-scene";
 import { VertexBio } from "../components/vertex-bio";
+import { OrbitLogo } from "../components/orbit-logo";
+import { Preloader } from "../components/preloader";
 import { FaWhatsapp } from "react-icons/fa";
 import { useScrollReveal } from "../hooks/use-scroll-reveal";
 
@@ -15,7 +16,6 @@ export default function Vertex() {
   useScrollReveal(journey);
   const [progress, setProgress] = useState(0);
   const [loaded, setLoaded] = useState(0);
-  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     let frame = 0;
     const update = () => {
@@ -31,7 +31,6 @@ export default function Vertex() {
     return () => { cancelAnimationFrame(frame); window.removeEventListener("scroll", update); window.removeEventListener("resize", update); };
   }, []);
   const goTo = (value: number) => {
-    setMenuOpen(false);
     const el = journey.current;
     if (el) window.scrollTo({ top: el.offsetTop + (el.offsetHeight - window.innerHeight) * value, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
   };
@@ -41,16 +40,7 @@ export default function Vertex() {
   const arrival = progress > 0.82;
   return (
     <main>
-      <header className="site-header" style={{ opacity: 1 - clamp((progress - 0.86) / 0.12), visibility: progress >= 0.99 ? "hidden" : "visible" }}>
-        <button className="brand" onClick={() => goTo(0)} aria-label="VF Vertex Digital — voltar ao início"><img src="/media/logo-transparent.png" alt="VF Vertex Digital" /></button>
-        <nav className="desktop-nav" aria-label="Navegação principal">
-          <button onClick={() => goTo(0)} className={!arrival ? "active" : ""}>O universo</button>
-          <button onClick={() => goTo(1)} className={arrival ? "active" : ""}>Sua próxima dimensão</button>
-        </nav>
-        <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="header-cta">Vamos criar <ArrowUpRight size={15} /></a>
-        <button className="menu-toggle" aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X /> : <Menu />}</button>
-        {menuOpen && <nav className="mobile-menu" aria-label="Navegação móvel"><button onClick={() => goTo(0)}>O universo</button><button onClick={() => goTo(1)}>Sua próxima dimensão <ArrowUpRight size={17} /></button><a href={whatsapp} target="_blank" rel="noopener noreferrer">Falar com a Vertex</a></nav>}
-      </header>
+      <Preloader progress={loaded} />
 
       <section ref={journey} className="journey" aria-label="Jornada pelo universo Vertex">
         <div className="stage" style={{ "--progress": progress } as CSSProperties}>
@@ -60,6 +50,7 @@ export default function Vertex() {
           <div className="side-note">AGÊNCIA DE MARKETING · JOÃO PESSOA</div>
 
           <div className="hero-content" data-scroll-reveal="group" data-motion-group style={{ opacity: introOpacity, transform: `translateY(${-progress * 220}px)`, visibility: introOpacity === 0 ? "hidden" : "visible" }}>
+            <OrbitLogo active={introOpacity > 0.04} variant="intro" />
             <p className="hero-promise"><KineticText variant="subtitle" active={introOpacity > 0.04}>Transforme visitantes<br className="mobile-break" /> em clientes com um</KineticText></p>
             <h1><KineticText active={introOpacity > 0.04}>Site de outro<br />Universo</KineticText></h1>
             <p className="hero-description"><KineticText variant="subtitle" active={introOpacity > 0.04}>Somos uma agência de marketing em <strong>João Pessoa</strong>. Criamos sites e landing pages de alta conversão, com experiências únicas e imersivas que trazem credibilidade e confiança à sua empresa no mercado digital.</KineticText></p>

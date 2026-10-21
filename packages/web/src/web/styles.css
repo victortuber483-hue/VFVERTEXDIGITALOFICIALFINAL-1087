@@ -87,10 +87,10 @@ h1{font-size:clamp(64px,7.7vw,116px);font-weight:300;line-height:1.06;letter-spa
 .portfolio-subtitle{font-size:15px;line-height:1.6;margin:0 0 12px;color:#d3cdd9}
 .portfolio-gallery{overflow:visible;padding:28px 0 34px;outline-offset:8px}.portfolio-gallery:focus-visible{outline:2px solid var(--violet);border-radius:24px}
 .portfolio-track{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;transform:none;transition:none}
-.portfolio-project{position:relative;isolation:isolate;padding:13px;border-radius:26px;background:linear-gradient(135deg,#18151d,#101012 55%,#1c1820);border:1px solid #d1b9ea29;box-shadow:inset 0 1px 0 #ffffff0b,0 20px 45px #0006;animation:portfolio-float 6s ease-in-out infinite;transition:border-color .3s,box-shadow .3s}
+.portfolio-project{position:relative;isolation:isolate;padding:13px;border-radius:26px;background:linear-gradient(120deg,#151515 0%,#090909 54%,#282828 100%);border:1px solid #ffffff1b;box-shadow:inset 0 1px 1px #ffffff09;animation:portfolio-float 6s ease-in-out infinite;transition:border-color .3s,box-shadow .3s}
 .portfolio-project:nth-child(2){animation-delay:-3s}
-.portfolio-project::before{content:'';position:absolute;inset:24px -16px -13px;z-index:-1;border-radius:35%;background:radial-gradient(ellipse at 12% 70%,#882bf050,transparent 60%),radial-gradient(ellipse at 95% 25%,#ebc3d330,transparent 55%);filter:blur(28px);pointer-events:none;animation:portfolio-aura 6s ease-in-out infinite}
-.portfolio-project::after{content:'';position:absolute;inset:-1px;border-radius:26px;border:1px solid #d6b8f019;pointer-events:none}
+.portfolio-project::before{content:none}
+.portfolio-project::after{content:none}
 .portfolio-project:hover{border-color:#c693f66b;box-shadow:inset 0 1px 0 #ffffff11,0 20px 50px #0008,0 0 24px #9749d61c}
 .project-preview{height:290px;border-radius:17px}.project-slider{position:relative;padding:33px 4px 8px;margin:0 9px}
 .project-slider input{height:7px;background:linear-gradient(90deg,#c69ceb var(--position),#351450 var(--position));border:1px solid #a45aee66}
@@ -212,6 +212,40 @@ h1{font-size:clamp(64px,7.7vw,116px);font-weight:300;line-height:1.06;letter-spa
 @media(max-width:767px){.slide-entry .slide-link{min-height:62px;font-size:16px;padding-left:70px}.slide-entry .slide-link>.slide-handle,.slide-entry .slide-link:hover>.slide-handle,.slide-entry .slide-link:focus-visible>.slide-handle{width:60px;height:60px}.slide-entry-project-live .slide-link{font-size:16px}.slide-entry-founder-cta .slide-link{font-size:14px}}
 .orbit-logo{position:relative;isolation:isolate;width:320px;max-width:100%;height:136px;margin:0 auto 18px;pointer-events:none}
 .orbit-logo .bio-logo{position:relative;z-index:2;width:245px;height:136px;margin:0 auto;object-fit:contain}
-.orbit-layer{position:absolute;left:-25px;top:-35px;width:calc(100% + 50px);height:calc(100% + 70px);pointer-events:none}
+.orbit-layer{position:absolute;left:-60px;top:-35px;width:calc(100% + 120px);height:calc(100% + 70px);pointer-events:none}
+.orbit-title{position:relative;display:inline-block;isolation:isolate}
+.orbit-title-back,.orbit-title-front{position:absolute;left:-62px;top:-56px;width:calc(100% + 124px);height:calc(100% + 112px);pointer-events:none}
+.bio-portfolio h2:has(.orbit-title){margin-bottom:46px}.founder-content h2:has(.orbit-title){margin-bottom:36px}
+.orbit-title-back{z-index:-1}.orbit-title-front{z-index:2}
 .orbit-behind{z-index:1}.orbit-front{z-index:3}
-@media(max-width:767px){.orbit-logo{height:125px;margin-bottom:17px;width:310px}.orbit-logo .bio-logo{width:240px;height:125px}.orbit-layer{left:-12px;width:calc(100% + 24px)}}
+@media(max-width:767px){.orbit-logo{height:125px;margin-bottom:17px;width:310px}.orbit-logo .bio-logo{width:240px;height:125px}.orbit-layer{left:-40px;width:calc(100% + 80px)}}
+.hero-content .orbit-logo-intro{position:absolute;bottom:100%;left:50%;translate:-50% 0;width:260px;height:110px;margin:0 0 14px}.hero-content .orbit-logo-intro .bio-logo{width:190px;height:106px;margin:0 auto}
+@media(max-width:767px){.hero-content .orbit-logo-intro{width:220px;height:96px;margin-bottom:10px}.hero-content .orbit-logo-intro .bio-logo{width:160px;height:90px}}
+.bio-footer .orbit-logo-footer{width:180px;height:100px;max-width:100%;margin:0 auto 30px}
+.bio-footer .orbit-logo-footer .bio-logo{width:180px;height:100px;margin:0}
+/* Portfolio and welcome cards start edge-on to the page and turn flat into their place, slowly. */
+.portfolio-project-reveal[data-scroll-reveal],.bio-card-reveal[data-scroll-reveal]{opacity:0;transform:perspective(1200px) translateX(var(--from-x,0px)) rotateY(var(--from-r,0deg));transform-origin:center center;transition:transform 2.2s cubic-bezier(.45,.05,.2,1),opacity 1.6s ease;backface-visibility:hidden}
+.portfolio-project-reveal[data-scroll-reveal="slide-left"],.bio-card-reveal[data-scroll-reveal="slide-left"]{--from-x:-40px;--from-r:-84deg}
+.portfolio-project-reveal[data-scroll-reveal="slide-right"],.bio-card-reveal[data-scroll-reveal="slide-right"]{--from-x:40px;--from-r:84deg}
+.portfolio-project-reveal[data-scroll-reveal].is-visible,.bio-card-reveal[data-scroll-reveal].is-visible{opacity:1;transform:perspective(1200px) translateX(0) rotateY(0deg)}
+.portfolio-project-reveal:nth-child(2)[data-scroll-reveal],.bio-card-reveal:nth-child(2)[data-scroll-reveal]{transition-delay:.3s,.3s}
+.bio-card-reveal:nth-child(3)[data-scroll-reveal]{transition-delay:.6s,.6s}
+@media(max-width:767px){.portfolio-project-reveal[data-scroll-reveal="slide-left"],.bio-card-reveal[data-scroll-reveal="slide-left"]{--from-x:-20px}.portfolio-project-reveal[data-scroll-reveal="slide-right"],.bio-card-reveal[data-scroll-reveal="slide-right"]{--from-x:20px}}
+@media(prefers-reduced-motion:reduce){.portfolio-project-reveal[data-scroll-reveal],.bio-card-reveal[data-scroll-reveal]{opacity:1;transform:none;transition:none}}
+
+/* Preloader: neon progress line shown while the hero frames load */
+.preloader{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#060608;transition:opacity .8s ease,visibility 0s linear .8s}
+.preloader.is-done{opacity:0;visibility:hidden;pointer-events:none}
+.preloader-label{margin:0;font-size:11px;letter-spacing:4px;color:#c4bec2a6}
+.preloader-track{position:relative;width:min(320px,70vw);height:2px;border-radius:2px;background:#ffffff14;overflow:visible}
+.preloader-track i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:linear-gradient(90deg,#7a2cff,#c084ff);box-shadow:0 0 6px #a855f7,0 0 16px #a855f799,0 0 28px #7a2cff66;transition:width .35s ease-out}
+.preloader-track i::after{content:"";position:absolute;right:-3px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:#e9d5ff;box-shadow:0 0 8px #c084ff,0 0 18px #a855f7}
+.preloader-percent{font-size:13px;letter-spacing:2px;color:#e9d5ff;font-variant-numeric:tabular-nums;text-shadow:0 0 8px #a855f7aa}
+@media (prefers-reduced-motion: reduce){.preloader,.preloader-track i{transition:none}}
+
+/* Only the first portfolio card enters, turning on its own axis without sideways shift,
+   so it never looks pushed out of its grid cell. Transform and opacity only. */
+.portfolio-project-reveal[data-scroll-reveal]{translate:none;filter:none;opacity:0;transform:perspective(1400px) rotateY(-30deg) scale(.96);transform-origin:center center;transition:transform 1.1s cubic-bezier(.33,.6,.36,1),opacity .9s ease;will-change:transform,opacity}
+.portfolio-project-reveal[data-scroll-reveal].is-visible{opacity:1;transform:perspective(1400px) rotateY(0) scale(1);translate:none;filter:none}
+@media(max-width:767px){.portfolio-project-reveal[data-scroll-reveal]:not(.is-visible){transform:perspective(1000px) rotateY(-20deg) scale(.97)}}
+@media(prefers-reduced-motion:reduce){.portfolio-project-reveal[data-scroll-reveal]{opacity:1;transform:none;transition:none;will-change:auto}}

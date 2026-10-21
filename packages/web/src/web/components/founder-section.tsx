@@ -1,3 +1,4 @@
+import { TitleOrbit } from "./title-orbit";
 import { SlideLink } from "./slide-link";
 import { KineticText } from "./kinetic-text";
 import { Sparkles } from "lucide-react";
@@ -16,7 +17,7 @@ export function FounderSection() {
       </div>
       <div className="founder-content" data-scroll-reveal="group" data-motion-group>
         <p className="founder-eyebrow"><KineticText variant="subtitle"><Sparkles size={18} /> Quem somos</KineticText></p>
-        <h2 id="founder-heading"><KineticText>Victor Ferreira</KineticText></h2>
+        <h2 id="founder-heading"><TitleOrbit><KineticText>Victor Ferreira</KineticText></TitleOrbit></h2>
         <p className="founder-role"><KineticText variant="subtitle">Fundador e CEO <span> | </span> VF Vertex Digital</KineticText></p>
         <p data-scroll-reveal="up">Tenho 21 anos e atuo há mais de 5 anos no marketing digital. Fundei a VF Vertex Digital para unir estratégia e criatividade em uma presença digital que vai além do comum.</p>
         <p data-scroll-reveal="up">Somos uma agência de marketing que cria <strong>sites e landing pages de alta conversão</strong>, com experiências únicas e imersivas. Cada projeto é pensado para transmitir credibilidade e confiança à sua empresa no mercado digital.</p>

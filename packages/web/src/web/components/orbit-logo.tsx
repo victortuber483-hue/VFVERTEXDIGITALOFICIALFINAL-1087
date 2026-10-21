@@ -1,113 +1,200 @@
 import { useEffect, useRef } from "react";
+import { drawHalo, drawRing, drawSparks, drawStar, drawTail, stepParticles, type Particles } from "./orbit-star";
 
-type Point = { x: number; y: number; z: number };
-type Spark = { x: number; y: number; life: number; size: number; front: boolean; vx: number; vy: number };
+const ORBIT_SPEED = 0.75;
+const INTRO_SPEED = 0.9;
 
-/** Project an extruded five-point star onto two transparent canvas layers. */
-export function OrbitLogo({ active }: { active: boolean }) {
+export type OrbitVariant = "hero" | "footer" | "intro";
+
+/** Position and depth of the star at a given phase. The intro path is a compound curve, the others a plain ellipse. */
+function locate(variant: OrbitVariant, phase: number, time: number, width: number, height: number) {
+  const cx = width / 2;
+  const cy = height / 2;
+  if (variant === "intro") {
+    // Figure-eight that breathes in width and rocks vertically, so the star never repeats a simple loop.
+    const rx = Math.min(width * 0.42, 210) * (1 + 0.05 * Math.sin(time * 0.7));
+    const ry = rx * 0.2;
+    const x = cx + Math.cos(phase) * rx + 12 * Math.sin(phase * 3);
+    const y = cy + Math.sin(phase * 2) * ry * 0.9 + 6 * Math.sin(time * 1.3);
+    return { cx, cy, rx, ry, x, y, front: Math.sin(phase) >= 0, ring: false };
+  }
+  const rx = Math.min(width * 0.4, 175);
+  const ry = rx * 0.3;
+  return { cx, cy, rx, ry, x: cx + Math.cos(phase) * rx, y: cy + Math.sin(phase) * ry, front: Math.sin(phase) >= 0, ring: true };
+}
+
+/**
+ * A faceted purple 3D star orbiting the logo with a fine comet tail. The orbit runs continuously from the
+ * moment the logo is visible. Whatever sits behind the logo is cut out by the logo's own alpha, so the
+ * wordmark never turns see-through.
+ */
+export function OrbitLogo({ active, variant = "hero" }: { active: boolean; variant?: OrbitVariant }) {
   const root = useRef<HTMLDivElement>(null);
-  const back = useRef<HTMLCanvasElement>(null);
-  const front = useRef<HTMLCanvasElement>(null);
+  const canvasEl = useRef<HTMLCanvasElement>(null);
+  const logoEl = useRef<HTMLImageElement>(null);
+
   useEffect(() => {
     const el = root.current;
-    const rear = back.current;
-    const fore = front.current;
-    if (!el || !rear || !fore) return;
-    const a = rear.getContext("2d");
-    const b = fore.getContext("2d");
-    if (!a || !b) return;
+    const fore = canvasEl.current;
+    const img = logoEl.current;
+    if (!el || !fore || !img) return;
+    const main = fore.getContext("2d");
+    if (!main) return;
+    // `scratch` holds everything that goes behind the logo; `mask` is the logo's silhouette.
+    const scratch = document.createElement("canvas");
+    const mask = document.createElement("canvas");
+    const back = scratch.getContext("2d");
+    const maskCtx = mask.getContext("2d", { willReadFrequently: true });
+    if (!back || !maskCtx) return;
     const media = matchMedia("(prefers-reduced-motion: reduce)");
+    const isIntro = variant === "intro";
+    const starSize = variant === "footer" ? 0.8 : isIntro ? 0.95 : 1.4;
+
     let visible = false;
     let raf = 0;
     let last = 0;
-    let time = .6;
+    let time = 0.6;
     let width = 0;
     let height = 0;
-    let particles: Spark[] = [];
+    let dpr = 1;
+    const particles: Particles = { trail: [], sparks: [] };
+
+    const animated = () => visible && active && !media.matches;
+
+    const buildMask = () => {
+      if (!img.complete || !img.naturalWidth) return;
+      const cr = fore.getBoundingClientRect();
+      const ir = img.getBoundingClientRect();
+      mask.width = fore.width;
+      mask.height = fore.height;
+      maskCtx.clearRect(0, 0, mask.width, mask.height);
+      maskCtx.drawImage(img, (ir.left - cr.left) * dpr, (ir.top - cr.top) * dpr, ir.width * dpr, ir.height * dpr);
+      const data = maskCtx.getImageData(0, 0, mask.width, mask.height);
+      const px = data.data;
+      // Any pixel the logo paints, soft edges included, becomes a solid occluder.
+      for (let i = 0; i < px.length; i += 4) {
+        px[i] = 0;
+        px[i + 1] = 0;
+        px[i + 2] = 0;
+        px[i + 3] = px[i + 3] > 10 ? 255 : 0;
+      }
+      maskCtx.putImageData(data, 0, 0);
+    };
+
     const resize = () => {
       const rect = fore.getBoundingClientRect();
-      width = rect.width; height = rect.height;
-      const dpr = Math.min(devicePixelRatio || 1, 2);
-      [rear, fore].forEach(canvas => { canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr); });
-      [a, b].forEach(ctx => ctx.setTransform(dpr, 0, 0, dpr, 0, 0));
-    };
-    const drawStar = (ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, scale: number) => {
-      const rotate = (p: Point): Point => {
-        const spin = angle * 1.5;
-        const tilt = .42 + Math.sin(angle * .7) * .25;
-        const px = p.x * Math.cos(spin) + p.z * Math.sin(spin);
-        const pz = -p.x * Math.sin(spin) + p.z * Math.cos(spin);
-        const py = p.y * Math.cos(tilt) - pz * Math.sin(tilt);
-        const depth = p.y * Math.sin(tilt) + pz * Math.cos(tilt);
-        const roll = angle * .4;
-        return { x: (px * Math.cos(roll) - py * Math.sin(roll)) * scale, y: (px * Math.sin(roll) + py * Math.cos(roll)) * scale, z: depth };
-      };
-      const ring = Array.from({ length: 10 }, (_, i) => {
-        const theta = i * Math.PI / 5 - Math.PI / 2;
-        const radius = i % 2 ? 13 : 29;
-        return { x: Math.cos(theta) * radius, y: Math.sin(theta) * radius };
+      width = rect.width;
+      height = rect.height;
+      dpr = Math.min(devicePixelRatio || 1, 2);
+      [fore, scratch].forEach(c => {
+        c.width = Math.round(width * dpr);
+        c.height = Math.round(height * dpr);
       });
-      const faces: Point[][] = [];
-      const upper = ring.map(p => rotate({ ...p, z: 5 }));
-      const lower = ring.map(p => rotate({ ...p, z: -5 }));
-      const tip = rotate({ x: 0, y: 0, z: 16 });
-      const reverseTip = rotate({ x: 0, y: 0, z: -12 });
-      for (let i = 0; i < 10; i++) {
-        const n = (i + 1) % 10;
-        faces.push([tip, upper[i], upper[n]], [reverseTip, lower[n], lower[i]], [upper[i], lower[i], lower[n], upper[n]]);
+      buildMask();
+      main.setTransform(dpr, 0, 0, dpr, 0, 0);
+      back.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    const render = (dt: number) => {
+      const phase = media.matches ? 0.6 : time * (isIntro ? INTRO_SPEED : ORBIT_SPEED);
+      const { cx, cy, rx, ry, x, y, front, ring } = locate(variant, phase, time, width, height);
+      const size = starSize * (1 + 0.05 * Math.sin(time * 2.1));
+
+      if (dt > 0 && !media.matches) stepParticles(particles, dt, x, y, front);
+
+      main.clearRect(0, 0, width, height);
+      back.clearRect(0, 0, width, height);
+
+      if (ring) {
+        // Orbit ring: front half on the visible canvas, back half in the masked layer.
+        drawRing(main, cx, cy, rx, ry, 0, Math.PI);
+        drawRing(back, cx, cy, rx, ry, Math.PI, Math.PI * 2);
       }
-      faces.sort((one, two) => one.reduce((sum, p) => sum + p.z, 0) / one.length - two.reduce((sum, p) => sum + p.z, 0) / two.length);
-      ctx.save(); ctx.translate(x, y);
-      const halo = ctx.createRadialGradient(0, 0, 4, 0, 0, 51 * scale);
-      halo.addColorStop(0, "#ce8bff80"); halo.addColorStop(.4, "#962fff35"); halo.addColorStop(1, "#962fff00");
-      ctx.fillStyle = halo; ctx.fillRect(-65, -65, 130, 130);
-      faces.forEach((face, i) => {
-        const shade = 35 + Math.max(0, Math.min(45, face.reduce((sum, p) => sum + p.z, 0) / face.length * 2 + 20));
-        const gradient = ctx.createLinearGradient(-25, -30, 25, 28);
-        gradient.addColorStop(0, i % 4 === 0 ? "#fff0ff" : `hsl(276 92% ${Math.min(90, shade + 23)}%)`);
-        gradient.addColorStop(.48, `hsl(274 88% ${shade}%)`);
-        gradient.addColorStop(1, "#49137d");
-        ctx.beginPath(); face.forEach((p, n) => n ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath();
-        ctx.fillStyle = gradient; ctx.fill(); ctx.strokeStyle = "#e5baff28"; ctx.lineWidth = .6; ctx.stroke();
-      });
-      ctx.restore();
+      drawTail(back, particles.trail, false);
+      drawSparks(back, particles.sparks, false);
+      // Halo always sits in the masked layer so it never lightens the wordmark.
+      drawHalo(back, x, y);
+      if (front) drawStar(main, x, y, time, size);
+      else drawStar(back, x, y, time, size);
+
+      // Cut the logo's silhouette out of everything behind it, then place that layer under the front layer.
+      back.save();
+      back.setTransform(1, 0, 0, 1, 0, 0);
+      back.globalCompositeOperation = "destination-out";
+      back.drawImage(mask, 0, 0);
+      back.restore();
+      main.save();
+      main.setTransform(1, 0, 0, 1, 0, 0);
+      main.drawImage(scratch, 0, 0);
+      main.restore();
+
+      drawTail(main, particles.trail, true);
+      drawSparks(main, particles.sparks, true);
     };
+
     const frame = (stamp: number) => {
-      const dt = Math.min(.04, (stamp - (last || stamp)) / 1000); last = stamp;
-      if (!media.matches) time += dt;
-      [a, b].forEach(ctx => ctx.clearRect(0, 0, width, height));
-      const angle = media.matches ? .6 : time * .82;
-      const radius = Math.min(148, width * .39);
-      const x = width / 2 + Math.cos(angle) * radius;
-      const y = height / 2 + Math.sin(angle) * 47;
-      const inFront = Math.sin(angle) >= 0;
-      const scale = .82 + Math.sin(angle) * .16;
-      if (!media.matches && dt > 0) particles.push({ x, y, front: inFront, life: 1, size: 1.2 + Math.random() * 1.8, vx: (Math.random() - .5) * 14, vy: 8 + Math.random() * 13 });
-      particles = particles.filter(p => p.life > 0);
-      particles.forEach(p => {
-        p.life -= dt * .85; p.x += p.vx * dt; p.y += p.vy * dt;
-        const ctx = p.front ? b : a;
-        ctx.save(); ctx.globalAlpha = Math.max(0, p.life * p.life); ctx.fillStyle = "#e7bcff"; ctx.shadowColor = "#af44ff"; ctx.shadowBlur = 9;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); ctx.fill();
-        if (p.size > 2.4) { ctx.strokeStyle = "#edd5ff"; ctx.lineWidth = .6; ctx.beginPath(); ctx.moveTo(p.x - 4 * p.life, p.y); ctx.lineTo(p.x + 4 * p.life, p.y); ctx.moveTo(p.x, p.y - 4 * p.life); ctx.lineTo(p.x, p.y + 4 * p.life); ctx.stroke(); }
-        ctx.restore();
-      });
-      drawStar(inFront ? b : a, x, y, time * 1.2, scale);
-      if (visible && active && !media.matches) raf = requestAnimationFrame(frame);
+      const dt = Math.min(0.033, (stamp - (last || stamp)) / 1000);
+      last = stamp;
+      time += dt;
+      render(dt);
+      if (animated()) raf = requestAnimationFrame(frame);
     };
+
     const start = () => {
-      cancelAnimationFrame(raf); last = 0;
-      if (visible && active) raf = requestAnimationFrame(frame);
-      else [a, b].forEach(ctx => ctx.clearRect(0, 0, width, height));
+      cancelAnimationFrame(raf);
+      last = 0;
+      if (!visible || !active) {
+        particles.trail = [];
+        particles.sparks = [];
+        main.clearRect(0, 0, width, height);
+        return;
+      }
+      if (media.matches) {
+        particles.trail = [];
+        particles.sparks = [];
+        render(0);
+        return;
+      }
+      raf = requestAnimationFrame(frame);
     };
-    const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; start(); }, { threshold: .1 });
-    const sizing = new ResizeObserver(() => { resize(); start(); });
-    resize(); observer.observe(el); sizing.observe(el); media.addEventListener("change", start);
-    return () => { cancelAnimationFrame(raf); observer.disconnect(); sizing.disconnect(); media.removeEventListener("change", start); particles = []; };
-  }, [active]);
-  return <div ref={root} className="orbit-logo" data-scroll-reveal="up">
-    <canvas ref={back} className="orbit-layer orbit-behind" aria-hidden="true" />
-    <img src="/media/logo-transparent.png" alt="VF Vertex Digital" className="bio-logo" />
-    <canvas ref={front} className="orbit-layer orbit-front" aria-hidden="true" />
-  </div>;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      start();
+    }, { threshold: 0.01 });
+    const sizing = new ResizeObserver(() => {
+      resize();
+      start();
+    });
+    const onLoad = () => {
+      buildMask();
+      start();
+    };
+
+    resize();
+    img.addEventListener("load", onLoad);
+    observer.observe(el);
+    sizing.observe(el);
+    media.addEventListener("change", start);
+    return () => {
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+      sizing.disconnect();
+      img.removeEventListener("load", onLoad);
+      media.removeEventListener("change", start);
+      particles.trail = [];
+      particles.sparks = [];
+    };
+  }, [active, variant]);
+
+  const className = variant === "footer" ? "orbit-logo orbit-logo-footer" : variant === "intro" ? "orbit-logo orbit-logo-intro" : "orbit-logo";
+  return (
+    <div ref={root} className={className} data-scroll-reveal={isIntroReveal(variant)}>
+      <img ref={logoEl} src={variant === "intro" ? "/media/logo-purple.png" : "/media/logo-transparent.png"} alt="VF Vertex Digital" className="bio-logo" />
+      <canvas ref={canvasEl} className="orbit-layer orbit-front" aria-hidden="true" />
+    </div>
+  );
 }
+
+// The hero logo lives inside a group that already reveals, so it does not run its own reveal.
+const isIntroReveal = (variant: OrbitVariant) => (variant === "intro" ? undefined : "up");

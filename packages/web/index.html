@@ -8,9 +8,17 @@
 		<title>VF Vertex Digital — Sites de outro universo</title>
 		<meta name="description" content="Sites e landing pages profissionais que unem elegância, sofisticação e estratégia de conversão. Conheça o universo VF Vertex Digital." />
 		<meta name="theme-color" content="#060608" />
+		<style>
+			html,body{margin:0;background:#060608}
+			.preloader{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#060608}
+			.preloader-label{margin:0;font:11px/1 system-ui,sans-serif;letter-spacing:4px;color:#c4bec2a6}
+			.preloader-track{position:relative;width:min(320px,70vw);height:2px;border-radius:2px;background:#ffffff14}
+			.preloader-track i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:2px;background:linear-gradient(90deg,#7a2cff,#c084ff);box-shadow:0 0 6px #a855f7,0 0 16px #a855f799,0 0 28px #7a2cff66}
+			.preloader-percent{font:13px/1 system-ui,sans-serif;letter-spacing:2px;color:#e9d5ff;text-shadow:0 0 8px #a855f7aa}
+		</style>
 	</head>
 	<body>
-		<div id="root"></div>
+		<div id="root"><div class="preloader"><p class="preloader-label">PREPARANDO O UNIVERSO</p><div class="preloader-track"><i></i></div><span class="preloader-percent">0%</span></div></div>
 		<script type="module" src="/src/web/main.tsx"></script>
 	</body>
 </html>

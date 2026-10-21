@@ -13,7 +13,7 @@ export function CosmicScene({ progress, onLoad }: Props) {
 
   useEffect(() => {
     let alive = true;
-    let loaded = 0;
+    let settled = 0;
     let next = 0;
     let raf = 0;
     let last = -1;
@@ -26,14 +26,18 @@ export function CosmicScene({ progress, onLoad }: Props) {
       if (!alive || next >= TOTAL) return;
       const index = next++;
       const image = new Image();
+      const settle = () => {
+        if (!alive) return;
+        settled++;
+        loadCallback.current(settled / TOTAL);
+        loadNext();
+      };
       image.onload = () => {
         if (!alive) return;
         images.current[index] = image;
-        loaded++;
-        loadCallback.current(loaded / TOTAL);
-        loadNext();
+        settle();
       };
-      image.onerror = () => { if (alive) loadNext(); };
+      image.onerror = settle;
       image.src = `/${folder}/${String(index + 1).padStart(3, "0")}.webp`;
     };
     for (let i = 0; i < 5; i++) loadNext();

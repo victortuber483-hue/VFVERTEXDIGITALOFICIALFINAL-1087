@@ -1,3 +1,4 @@
+import { TitleOrbit } from "./title-orbit";
 import { SlideLink } from "./slide-link";
 import { KineticText } from "./kinetic-text";
 import { useState, useEffect, useRef, type CSSProperties } from "react";
@@ -8,7 +9,7 @@ const projects = [
   { id: "bora", parts: 3, name: "Bora com Luisinho", url: "https://boracomluisinho.runable.site/", description: "Landing page para passeios e transfers no litoral da Paraíba, Pipa e Natal. Uma experiência visual que conecta o visitante ao WhatsApp." },
 ];
 
-function ProjectCard({ project }: { project: typeof projects[number] }) {
+function ProjectCard({ project, side }: { project: typeof projects[number]; side?: "slide-left" | "slide-right" }) {
   const [position, setPosition] = useState(0);
   const [interacted, setInteracted] = useState(false);
   const viewport = useRef<HTMLDivElement>(null);
@@ -23,7 +24,7 @@ function ProjectCard({ project }: { project: typeof projects[number] }) {
     return () => observer.disconnect();
   }, []);
   return (
-    <div className="portfolio-project-reveal"><article className="portfolio-project" aria-label={project.name}>
+    <div className="portfolio-project-reveal" data-scroll-reveal={side}><article className="portfolio-project" aria-label={project.name}>
       <div ref={viewport} className="project-preview"><div ref={content} className="project-page-image" style={{ transform: `translateY(${-distance * position / 100}px)` }}>{Array.from({ length: project.parts }, (_, index) => <img key={index} src={`/media/portfolio-${project.id}-part-${index + 1}.webp`} alt={index === 0 ? `Captura completa do site ${project.name}` : ""} loading="lazy" width="1100" height={index === project.parts - 1 ? (project.id === "ala" ? 1005 : 211) : 2000} />)}</div></div>
       <div className={`project-slider${interacted ? " is-exploring" : ""}`} style={{ "--position": `${position}%` } as CSSProperties}>
         <label className="sr-only" htmlFor={`preview-${project.id}`}>Percorrer página de {project.name}</label>
@@ -40,8 +41,8 @@ export function PortfolioGallery() {
   return (
     <section className="bio-portfolio" data-scroll-reveal="flip" data-motion-group aria-labelledby="portfolio-heading">
       <div className="portfolio-entry-surface">
-      <h2 id="portfolio-heading"><KineticText>Portfólio</KineticText></h2><p className="portfolio-subtitle"><KineticText variant="subtitle">Design que dá vida a cada negócio.<br />Conheça nossos projetos por inteiro.</KineticText></p>
-      <section className="portfolio-gallery" aria-label="Projetos do portfólio; deslize para ver todos"><div className="portfolio-track">{projects.map((project) => <ProjectCard key={project.id} project={project} />)}</div></section>
+      <h2 id="portfolio-heading"><TitleOrbit><KineticText>Portfólio</KineticText></TitleOrbit></h2><p className="portfolio-subtitle"><KineticText variant="subtitle">Design que dá vida a cada negócio.<br />Conheça nossos projetos por inteiro.</KineticText></p>
+      <section className="portfolio-gallery" aria-label="Projetos do portfólio; deslize para ver todos"><div className="portfolio-track">{projects.map((project, index) => <ProjectCard key={project.id} project={project} side={index === 0 ? "slide-left" : undefined} />)}</div></section>
       <p className="portfolio-swipe-hint"><MoveHorizontal size={15} /> Deslize para conhecer o próximo projeto</p>
       </div>
     </section>
